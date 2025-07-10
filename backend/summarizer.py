@@ -6,7 +6,12 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 
 load_dotenv()
+
+# Load Gemini API key
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+# Correct model name and method
+model = genai.GenerativeModel(model_name="models/gemini-pro")  # ✅ correct model name
 
 def extract_text_from_pdf(file_bytes):
     reader = PdfReader(io.BytesIO(file_bytes))
@@ -33,8 +38,7 @@ def extract_all_text(file_bytes):
 
 def summarize_with_gemini(text, prompt="Summarize this text"):
     try:
-        model = genai.GenerativeModel("gemini-pro")
-        response = model.generate_content(f"{prompt}\n\n{text[:100000]}")
+        response = model.generate_content(f"{prompt}\n\n{text[:30000]}")  # Limit to ~30k characters
         return response.text
     except Exception as e:
         return f"❌ Gemini Error: {str(e)}"
