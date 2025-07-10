@@ -16,7 +16,13 @@ if uploaded_file:
     if st.button(f"Generate {summary_type}"):
         with st.spinner("Processing your file, please wait..."):
             try:
-                data = {"type": summary_type.lower().replace(" ", "")}
+                mapping = {
+                    "Chapter Summary": "chapter",
+                    "Topic Summary": "topic",
+                    "Book Concept": "bookconcept"
+                }
+                data = {"type": mapping[summary_type]}
+
                 files = {"file": uploaded_file.getvalue()}
                 response = requests.post("https://book-summarizer-27gm.onrender.com/summarize", data=data, files={"file": uploaded_file})
                 if response.status_code == 200:
