@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
-from summarizer import extract_all_text, summarize_with_gpt
+from summarizer import extract_all_text,summarize_with_gemini 
 import os
 from dotenv import load_dotenv
 
