@@ -1,12 +1,12 @@
 import io
+import os
 from PyPDF2 import PdfReader
 from docx import Document
-import openai
-import os
 from dotenv import load_dotenv
+import google.generativeai as genai
 
 load_dotenv()
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 def extract_text_from_pdf(file_bytes):
     reader = PdfReader(io.BytesIO(file_bytes))
@@ -31,17 +31,10 @@ def extract_all_text(file_bytes):
             except:
                 return ["❌ Unsupported or unreadable file format."]
 
-def summarize_with_gpt(text, prompt="Summarize this text"):
+def summarize_with_gemini(text, prompt="Summarize this text"):
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": text[:6000]}
-            ],
-            max_tokens=800,
-            temperature=0.7
-        )
-        return response.choices[0].message.content.strip()
+        model = genai.GenerativeModel("gemini-pro")
+        response = model.generate_content(f"{prompt}\n\n{text[:100000]}")
+        return response.text
     except Exception as e:
-        return f"❌ GPT Error: {str(e)}"
+        return f"❌ Gemini Error: {str(e)}"
