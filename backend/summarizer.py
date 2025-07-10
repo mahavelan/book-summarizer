@@ -1,38 +1,49 @@
-import streamlit as st
-import requests
+# backend/summarizer.py
 
-st.set_page_config(page_title="📘 Book Summary Web App", layout="centered")
+import io
+from PyPDF2 import PdfReader
+from docx import Document
+import openai
+import os
+from dotenv import load_dotenv
 
-st.title("📘 Book Summary Web App")
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-uploaded_file = st.file_uploader("Upload Book File (PDF, DOCX, TXT, etc):", type=None)
+def extract_text_from_pdf(file_bytes):
+    reader = PdfReader(io.BytesIO(file_bytes))
+    return [page.extract_text() or "" for page in reader.pages]
 
-summary_type = st.radio("Choose summary type:", ["Chapter", "Topic", "Book Concept"])
+def extract_text_from_docx(file_bytes):
+    doc = Document(io.BytesIO(file_bytes))
+    return [para.text for para in doc.paragraphs]
 
-page_range = ""
-if summary_type == "Topic":
-    page_range = st.text_input("Enter page range (e.g., 5-10):")
+def extract_text_from_txt(file_bytes):
+    return io.BytesIO(file_bytes).read().decode("utf-8").splitlines()
 
-if uploaded_file:
-    st.success("✅ File uploaded successfully.")
-    if st.button(f"Generate {summary_type}"):
-        with st.spinner("Processing your file, please wait..."):
+def extract_all_text(file_bytes):
+    try:
+        return extract_text_from_pdf(file_bytes)
+    except:
+        try:
+            return extract_text_from_docx(file_bytes)
+        except:
             try:
-                files = {"file": uploaded_file.getvalue()}
-                data = {"type": summary_type.lower().replace(" ", "")}
+                return extract_text_from_txt(file_bytes)
+            except:
+                return ["❌ Unsupported or unreadable file format."]
 
-                if summary_type == "Topic" and page_range:
-                    data["page_range"] = page_range
-
-                response = requests.post("http://localhost:8000/summarize", files={"file": uploaded_file}, data=data)
-
-                if response.status_code == 200:
-                    result = response.json().get("result", "No summary found.")
-                    st.text_area(f"{summary_type} Output:", value=result, height=400)
-                else:
-                    st.error("❌ Failed to get summary. Please try again.")
-
-            except Exception as e:
-                st.error(f"❌ Error: {str(e)}")
-else:
-    st.info("⬆️ Please upload a book file to begin.")
+def summarize_with_gpt(text, prompt="Summarize this text"):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": text[:6000]}  # truncate to stay under token limit
+            ],
+            max_tokens=800,
+            temperature=0.7
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"❌ GPT Error: {str(e)}"
