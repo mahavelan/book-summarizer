@@ -18,7 +18,7 @@ if uploaded_file:
             try:
                 data = {"type": summary_type.lower().replace(" ", "")}
                 files = {"file": uploaded_file.getvalue()}
-                response = requests.post("http://localhost:8000/summarize", data=data, files={"file": uploaded_file})
+                response = requests.post("https://book-summarizer-27gm.onrender.com", data=data, files={"file": uploaded_file})
                 if response.status_code == 200:
                     result = response.json().get("result", "No summary found.")
                     st.text_area(f"{summary_type} Output:", value=result, height=400)
