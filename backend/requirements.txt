@@ -2,6 +2,6 @@ fastapi
 uvicorn
 python-docx
 PyPDF2
-openai
+openai>=1.0.0
 python-dotenv
-python-multipart   # ✅ REQUIRED for file upload (Fixes your error)
+python-multipart   
