@@ -2,6 +2,6 @@ fastapi
 uvicorn
 python-docx
 PyPDF2
-openai>=1.0.0
+google-generativeai
 python-dotenv
-python-multipart   
+python-multipart
