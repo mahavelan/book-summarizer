@@ -8,11 +8,11 @@ import google.generativeai as genai
 # Load .env file
 load_dotenv()
 
-# Load Gemini API key from environment
+# ✅ Load Gemini API key correctly
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-# ✅ Use correct Gemini model name
-model = genai.GenerativeModel("gemini-pro")
+# ✅ Use the correct model
+model = genai.GenerativeModel("models/gemini-2.5-flash")
 
 # --- File extractors ---
 
