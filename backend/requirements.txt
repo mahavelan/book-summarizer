@@ -4,3 +4,4 @@ python-docx
 PyPDF2
 openai
 python-dotenv
+python-multipart   # ✅ REQUIRED for file upload (Fixes your error)
