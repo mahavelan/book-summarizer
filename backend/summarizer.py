@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def extract_text_from_pdf(file_bytes):
     reader = PdfReader(io.BytesIO(file_bytes))
@@ -33,7 +33,7 @@ def extract_all_text(file_bytes):
 
 def summarize_with_gpt(text, prompt="Summarize this text"):
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": prompt},
@@ -43,5 +43,5 @@ def summarize_with_gpt(text, prompt="Summarize this text"):
             temperature=0.7
         )
         return response.choices[0].message.content.strip()
-    except openai.error.OpenAIError as e:
+    except Exception as e:
         return f"❌ GPT Error: {str(e)}"
