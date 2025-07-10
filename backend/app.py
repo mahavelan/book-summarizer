@@ -1,9 +1,18 @@
+# backend/app.py
+
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from summarizer import summarize_chapters, summarize_topics, summarize_concept
+from typing import Optional
+from summarizer import extract_all_text, summarize_with_gpt
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+openai_api_key = os.getenv("OPENAI_API_KEY")
 
 app = FastAPI()
 
+# Allow frontend to connect
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,16 +24,29 @@ app.add_middleware(
 async def summarize(
     file: UploadFile = File(...),
     type: str = Form(...),
-    page_range: str = Form(None)  # ✅ optional field for topic summary
+    page_range: Optional[str] = Form(None)
 ):
     content = await file.read()
+    pages = extract_all_text(content)
 
     if type == "chapter":
-        result = summarize_chapters(content)
+        full_text = "\n".join(pages)
+        return {"result": summarize_with_gpt(full_text, "Summarize the text chapter by chapter.")}
+
     elif type == "topic":
-        result = summarize_topics(content, page_range)
+        try:
+            if page_range:
+                start, end = map(int, page_range.strip().split("-"))
+                selected_pages = pages[start-1:end]
+            else:
+                selected_pages = pages
+            text = "\n".join(selected_pages)
+            return {"result": summarize_with_gpt(text, "Summarize the following topic based on these pages.")}
+        except:
+            return {"result": "❌ Invalid page range. Use format like 2-5."}
+
     elif type == "bookconcept":
-        result = summarize_concept(content)
-    else:
-        result = "Invalid type selected"
-    return {"result": result}
+        full_text = "\n".join(pages)
+        return {"result": summarize_with_gpt(full_text, "What is the overall concept or key idea of this book?")}
+
+    return {"result": "❌ Invalid type provided."}
