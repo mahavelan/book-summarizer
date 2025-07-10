@@ -6,8 +6,6 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
-
 app = FastAPI()
 
 app.add_middleware(
@@ -31,15 +29,18 @@ async def summarize(
         return {"result": summarize_with_gpt(full_text, "Summarize the text chapter by chapter.")}
 
     elif type == "topic":
-        if page_range:
-            try:
+        try:
+            if page_range:
                 start, end = map(int, page_range.strip().split("-"))
+                if start < 1 or end > len(pages) or start > end:
+                    raise ValueError
                 selected_pages = pages[start-1:end]
                 text = "\n".join(selected_pages)
                 return {"result": summarize_with_gpt(text, "Summarize the following topic based on these pages.")}
-            except:
-                return {"result": "❌ Invalid page range. Use format like 2-5."}
-        return {"result": "❌ Page range is required for topic summary."}
+            else:
+                return {"result": "❌ Please provide a page range like 2-5."}
+        except:
+            return {"result": "❌ Invalid page range. Use format like 2-5."}
 
     elif type == "bookconcept":
         full_text = "\n".join(pages)
